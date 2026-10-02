@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AETHEL CELLULAR — Private Epigenetic Diagnostics & Longevity Medicine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        'alabaster': '#F8FAF8',
+        'celadon-mist': '#F0F4F1',
+        'pine-obsidian': '#16201E',
+        'slate-celadon': '#576864',
+        'linen-hairline': '#DFE6E2',
+        'medical-emerald': '#2D6A4F',
+        'suede-cognac': '#B08968',
+      },
+      fontFamily: {
+        'serif': ['Newsreader', 'Cormorant Garamond', 'serif'],
+        'mono': ['IBM Plex Mono', 'monospace'],
+      }
+    }
+  }
+}
+</script>
+<style>
+:root { --bg:#F8FAF8; --pine:#16201E; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--pine); font-family: 'Newsreader', serif; -webkit-font-smoothing: antialiased; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+.range-slider::-webkit-slider-runnable-track { height:2px; background:#DFE6E2; }
+.range-slider::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; background:#16201E; border-radius:50%; margin-top:-8px; cursor:pointer; border:2px solid #F8FAF8; box-shadow:0 0 0 1px #16201E; }
+.range-slider::-moz-range-track { height:2px; background:#DFE6E2; }
+.range-slider::-moz-range-thumb { width:18px; height:18px; background:#16201E; border-radius:50%; border:2px solid #F8FAF8; cursor:pointer; }
+.no-scrollbar::-webkit-scrollbar { display:none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo, useRef } = React;
+
+const CURRENCY_RATES = {
+  CHF: { rate: 1, symbol: 'Fr.', label: 'CHF' },
+  GBP: { rate: 0.88, symbol: '£', label: 'GBP' },
+  EUR: { rate: 0.94, symbol: '€', label: 'EUR' },
+  USD: { rate: 1.12, symbol: '$', label: 'USD' },
+};
+
+const TIERS = [
+  { id:'tier1', name:'Tier I: Epigenetic Genome Baseline', basePrice:6500, tag:'FOUNDATIONAL', features:['Full DNA methylation array (850k CpG sites)','Telomere length audit via TRF & qPCR','Baseline metabolomic panel — 52 metabolites','Quarterly physician review & protocol adjustment','Private epigenetic report with GrimAge, PhenoAge'] },
+  { id:'tier2', name:'Tier II: Cellular Optimization Protocol', basePrice:18200, tag:'MOST ALLOCATED', features:['Includes all Tier I diagnostics','Monthly microfluidic blood draws — 140+ biomarkers','Personalized peptide regimens (BPC-157, MOTS-c, Epitalon)','Continuous glucose & lactate monitoring (Dexcom G7 Pro)','Quarterly DEXA and visceral fat 3T MRI','On-call clinical concierge 7 days'] },
+  { id:'tier3', name:'Tier III: Comprehensive Longevity Concierge', basePrice:42000, tag:'EXECUTIVE COHORT', features:['Includes all Tier II interventions','Full-body preventative 3T MRI sequencing — biannual','Private direct phone line to Chief Medical Officer','Dedicated private suite access — Zurich & London','International phlebotomy courier service (72-hr global)','Annual cohort cap: 24 patients only','Family office medical governance reporting'] },
+];
+
+const BIOMARKER_TABS = {
+  'Epigenetic Clocks': [
+    { name:'GrimAge DNAm v2', std:'1.0x chrono', target:'0.78–0.88x', mechanism:'Plasma protein surrogates + smoking pack-years methylation' },
+    { name:'PhenoAge DNAm', std:'± 2.1 yrs', target:'-3.5 to -6.0 yrs', mechanism:'Clinical labs + leukocyte composition DNAm' },
+    { name:'DunedinPACE', std:'1.00', target:'0.72–0.85', mechanism:'Rate of aging — 19 organ system decline' },
+    { name:'Telomere Attrition Rate', std:'35–70 bp/yr', target:'<15 bp/yr', mechanism:'TRF analysis + TERT activation potential' },
+  ],
+  'Metabolic & Mitochondrial': [
+    { name:'GlycA Inflammation', std:'< 350 µmol/L', target:'< 310 µmol/L', mechanism:'Glycoprotein acetylation — systemic inflammation' },
+    { name:'Fasting Insulin HOMA-IR', std:'< 2.0', target:'< 1.1', mechanism:'Peptide C + glucose clamp correlation' },
+    { name:'Lactate / Pyruvate Ratio', std:'10:1–20:1', target:'8:1–12:1', mechanism:'Mitochondrial redox state' },
+    { name:'NAD+ / NADH Ratio', std:'> 4.0', target:'> 7.5', mechanism:'Whole-blood LC-MS + salvage pathway flux' },
+  ],
+  'Cardiovascular Endothelium': [
+    { name:'ApoB / ApoA1 Ratio', std:'< 0.70', target:'< 0.48', mechanism:'Atherogenic particle burden' },
+    { name:'Endothelial Glycocalyx', std:'> 0.8 µm', target:'> 1.2 µm', mechanism:'Sidestream darkfield imaging' },
+    { name:'Pulse Wave Velocity', std:'< 9.5 m/s', target:'< 7.2 m/s', mechanism:'Carotid-femoral tonometry' },
+    { name:'Lp(a) Mass', std:'< 30 mg/dL', target:'< 12 mg/dL', mechanism:'Isoform-independent immunoassay' },
+  ],
+  'Neuro-Immune Signaling': [
+    { name:'IGF-1 Somatotropic Axis', std:'100–200 ng/mL', target:'135–165 ng/mL', mechanism:'Growth hormone pulsatility mapping' },
+    { name:'BDNF Serum', std:'> 18 ng/mL', target:'> 32 ng/mL', mechanism:'Pro-BDNF vs mature BDNF ELISA' },
+    { name:'IL-6 / IL-10 Balance', std:'< 2.5', target:'< 1.1', mechanism:'High-sensitivity multiplex' },
+    { name:'pTau-217 / Aβ42 Ratio', std:'< 0.14', target:'< 0.08', mechanism:'Simoa HD-X plasma Alzheimer screening' },
+  ],
+};
+
+function App(){
+  const [currency,setCurrency]=useState('CHF');
+  const [chronoAge,setChronoAge]=useState(45);
+  const [sleepOpt,setSleepOpt]=useState('1.5 hrs');
+  const [rhr,setRhr]=useState('56–65 bpm');
+  const [vo2,setVo2]=useState('Excellent');
+  const [glucose,setGlucose]=useState('Optimized (<85 mg/dL)');
+  const [biomarkerTab,setBiomarkerTab]=useState('Epigenetic Clocks');
+  const [showAdmission,setShowAdmission]=useState(false);
+  const [admissionStep,setAdmissionStep]=useState(1);
+  const [selectedTier,setSelectedTier]=useState('tier2');
+  const [showSummary,setShowSummary]=useState(false);
+  const [showPortal,setShowPortal]=useState(false);
+  const [intakeConfirmed,setIntakeConfirmed]=useState(false);
+  const [dossierId,setDossierId]=useState('');
+  const [formData,setFormData]=useState({ fullName:'', dob:'', jurisdiction:'', phone:'', objectives:[], location:'Zurich Enge' });
+  const engineRef=useRef(null);
+  const tiersRef=useRef(null);
+
+  const diagnostics = useMemo(()=>{
+    let adjustment=0;
+    if(sleepOpt==='< 1.0 hr') adjustment+=2.5;
+    if(sleepOpt==='1.5 hrs') adjustment+=0.8;
+    if(sleepOpt==='2.0+ hrs') adjustment-=1.2;
+    if(rhr==='45–55 bpm') adjustment-=1.5;
+    if(rhr==='56–65 bpm') adjustment+=0.2;
+    if(rhr==='66+ bpm') adjustment+=2.0;
+    if(vo2==='Fair') adjustment+=2.1;
+    if(vo2==='Excellent') adjustment-=0.6;
+    if(vo2==='Elite (>50 ml/kg/min)') adjustment-=2.4;
+    if(glucose==='Optimized (<85 mg/dL)') adjustment-=1.8;
+    if(glucose==='Borderline') adjustment+=1.1;
+    if(glucose==='Elevated') adjustment+=3.2;
+    const bioAge = Math.max(24, Math.min(80, chronoAge + adjustment));
+    const rateOfAging = Math.max(0.68, Math.min(1.35, 1 + adjustment/15));
+    const reversalPotential = Math.max(1.2, Math.min(7.8, Math.abs(adjustment)+1.8+(vo2==='Elite (>50 ml/kg/min)'?1.2:0)));
+    const phenoAgeReduction = bioAge < chronoAge ? (chronoAge - bioAge + reversalPotential*0.4).toFixed(1) : reversalPotential.toFixed(1);
+    return { bioAge:bioAge.toFixed(1), chronoAge, adjustment:adjustment.toFixed(1), rateOfAging:rateOfAging.toFixed(2), reversalPotential:reversalPotential.toFixed(1), phenoReduction:phenoAgeReduction, delta:(bioAge-chronoAge).toFixed(1) };
+  },[chronoAge,sleepOpt,rhr,vo2,glucose]);
+
+  const accessionCode = useMemo(()=>{
+    const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const id = Array.from({length:8},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+    return `AE-${chronoAge}${diagnostics.bioAge.replace('.','')}-${id}-CL`;
+  },[chronoAge,diagnostics.bioAge]);
+
+  const handleAdmissionSubmit=()=>{
+    const newId=`AE-${Math.floor(1000+Math.random()*9000)}-CL`;
+    setDossierId(newId);
+    setIntakeConfirmed(true);
+  };
+
+  const formatPrice=(base)=>{
+    const rate=CURRENCY_RATES[currency].rate;
+    const symbol=CURRENCY_RATES[currency].symbol;
+    const converted=Math.round(base*rate);
+    return `${symbol} ${converted.toLocaleString()}`;
+  };
+
+  useEffect(()=>{
+    if(showAdmission||showSummary||showPortal){ document.body.style.overflow='hidden'; } else { document.body.style.overflow='unset'; }
+    return ()=>{ document.body.style.overflow='unset'; };
+  },[showAdmission,showSummary,showPortal]);
+
+  return (
+    <div className="min-h-screen bg-alabaster text-pine-obsidian selection:bg-pine-obsidian selection:text-[#F8FAF8]">
+      <div className="bg-pine-obsidian text-[#DFE6E2] py-2 px-4 text-center">
+        <p className="font-mono text-[10px] tracking-[0.22em] uppercase leading-relaxed">Swiss Medic Regulated • Privately Accredited Geneva & Harley Street Clinics • Confidential Executive Protocols</p>
+      </div>
+
+      <nav className="sticky top-0 z-40 bg-alabaster/80 backdrop-blur-xl border-b border-linen-hairline">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-10 h-[78px] flex items-center justify-between">
+          <div className="flex items-center gap-10">
+            <div className="flex flex-col">
+              <span className="font-serif text-[24px] tracking-[0.04em] font-medium leading-none">AETHEL</span>
+              <span className="font-mono text-[9px] tracking-[0.18em] text-slate-celadon mt-1">CELLULAR MEDICINE · EST. 2018</span>
+            </div>
+            <div className="hidden xl:flex items-center gap-8">
+              {[
+                {label:'DIAGNOSTIC TIERS', ref:tiersRef},
+                {label:'EPIGENETIC ENGINE', ref:engineRef},
+                {label:'CLINICAL LOCATIONS', ref:null},
+                {label:'THE PROTOCOL', ref:null},
+                {label:'PHYSICIAN FACULTY', ref:null},
+              ].map((link)=>(
+                <button key={link.label} onClick={()=>link.ref?.current?.scrollIntoView({behavior:'smooth'})} className="font-mono text-[11px] tracking-[0.14em] hover:text-medical-emerald transition-colors">{link.label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-1 bg-celadon-mist rounded-full p-1 border border-linen-hairline">
+              {Object.keys(CURRENCY_RATES).map((c)=>(
+                <button key={c} onClick={()=>setCurrency(c)} className={`px-3 py-1.5 rounded-full font-mono text-[11px] tracking-wide transition-all ${currency===c?'bg-pine-obsidian text-[#F8FAF8]':'text-slate-celadon hover:text-pine-obsidian'}`}>{c==='CHF'?'Fr.':CURRENCY_RATES[c].symbol} {c}</button>
+              ))}
+            </div>
+            <button onClick={()=>setShowPortal(true)} className="hidden md:inline-flex font-mono text-[11px] tracking-[0.14em] border border-linen-hairline px-5 py-3 hover:bg-celadon-mist transition-colors">PATIENT PORTAL</button>
+            <button onClick={()=>{setSelectedTier('tier2'); setShowAdmission(true); setAdmissionStep(1); setIntakeConfirmed(false);}} className="bg-pine-obsidian text-[#F8FAF8] font-mono text-[11px] tracking-[0.14em] px-6 py-3.5 hover:bg-[#1f2c29] transition-colors">REQUEST CLINICAL ADMISSION</button>
+          </div>
+        </div>
+      </nav>
+
+      <section className="max-w-[1600px] mx-auto px-6 lg:px-10 pt-12 lg:pt-20 pb-16">
+        <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-10 lg:gap-16 items-start">
+          <div>
+            <div className="inline-flex items-center gap-2 border border-linen-hairline bg-celadon-mist/60 px-3 py-1.5 mb-8">
+              <span className="w-1.5 h-1.5 bg-medical-emerald rounded-full animate-pulse"></span>
+              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-slate-celadon">Clinical Longevity Medicine · Cohort 2026/2027</span>
+            </div>
+            <h1 className="font-serif text-[44px] lg:text-[68px] leading-[0.92] tracking-[-0.02em] font-[300]">Systemic cellular<br/>restoration through<br/><span className="italic font-[400]">deep epigenetic</span> sequencing.</h1>
+            <p className="mt-8 max-w-[560px] font-serif text-[18px] lg:text-[20px] leading-[1.55] text-slate-celadon font-[300]">AETHEL combines whole-genome sequencing, real-time metabolomic profiling, and personalized peptide interventions for patients requiring verifiable physiological age reversal.</p>
+            <div className="mt-10 grid grid-cols-3 max-w-[520px] border-t border-linen-hairline pt-8">
+              {[
+                {value:'3.4 yrs', label:'Average Epigenetic Age Reduction at Month 12'},
+                {value:'140+', label:'Active Serum & Cellular Biomarkers Tracked'},
+                {value:'100', label:'Patient Cohort Cap per Physician Annually'},
+              ].map((stat)=>(
+                <div key={stat.value} className="pr-6 border-r last:border-0 border-linen-hairline">
+                  <div className="font-mono text-[28px] leading-none tracking-tight tabular-nums">{stat.value}</div>
+                  <div className="font-mono text-[10px] leading-[1.4] tracking-wide text-slate-celadon mt-2 uppercase max-w-[130px]">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <button onClick={()=>engineRef.current?.scrollIntoView({behavior:'smooth'})} className="bg-pine-obsidian text-[#F8FAF8] font-mono text-[11px] tracking-[0.18em] px-8 py-4 hover:bg-[#1f2c29] transition-colors">CALCULATE BIOLOGICAL AGE</button>
+              <button onClick={()=>{setShowAdmission(true); setIntakeConfirmed(false);}} className="border border-pine-obsidian font-mono text-[11px] tracking-[0.18em] px-8 py-4 hover:bg-pine-obsidian hover:text-[#F8FAF8] transition-colors">REQUEST CONFIDENTIAL INTAKE</button>
+            </div>
+            <div className="mt-14 flex items-center gap-6 text-[11px] font-mono tracking-wide text-slate-celadon">
+              <span className="flex items-center gap-2"><span className="w-px h-4 bg-linen-hairline"></span>SWISSMEDIC NO. 2024-MD-0482</span>
+              <span className="flex items-center gap-2"><span className="w-px h-4 bg-linen-hairline"></span>GCP / GLP CERTIFIED</span>
+              <span className="flex items-center gap-2"><span className="w-px h-4 bg-linen-hairline"></span>ISO 15189:2022</span>
+            </div>
+          </div>
+          <div className="relative">
+            <div className="relative overflow-hidden bg-celadon-mist aspect-[4/3] lg:aspect-[1/1]">
+              <img src="assets/images/clinic-interior-zurich.jpg" alt="Zurich Clinic" className="w-full h-full object-cover" />
+              <div className="absolute top-[28%] left-[22%] group">
+                <div className="w-8 h-8 rounded-full bg-[#F8FAF8]/90 backdrop-blur border border-pine-obsidian flex items-center justify-center font-mono text-[10px]">01</div>
+                <div className="absolute left-10 top-1/2 -translate-y-1/2 bg-pine-obsidian text-[#F8FAF8] px-3 py-2 font-mono text-[10px] tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">DIAGNOSTIC LOUNGE · LAKE ZURICH VIEW</div>
+              </div>
+              <div className="absolute top-[58%] right-[18%] group">
+                <div className="w-8 h-8 rounded-full bg-[#F8FAF8]/90 backdrop-blur border border-pine-obsidian flex items-center justify-center font-mono text-[10px]">02</div>
+                <div className="absolute right-10 top-1/2 -translate-y-1/2 bg-pine-obsidian text-[#F8FAF8] px-3 py-2 font-mono text-[10px] tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">RECOVERY CHAISE · BRUSHED BRONZE</div>
+              </div>
+              <div className="absolute bottom-[18%] left-[36%] group">
+                <div className="w-8 h-8 rounded-full bg-[#F8FAF8]/90 backdrop-blur border border-pine-obsidian flex items-center justify-center font-mono text-[10px]">03</div>
+                <div className="absolute left-10 top-1/2 -translate-y-1/2 bg-pine-obsidian text-[#F8FAF8] px-3 py-2 font-mono text-[10px] tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">TRAVERTINE ENVELOPE · SCANDI-SWISS</div>
+              </div>
+            </div>
+            <div className="mt-4 flex justify-between font-mono text-[10px] tracking-[0.14em] text-slate-celadon">
+              <span>ZURICH ENGE · GOTTHARDSTRASSE 26</span>
+              <span>51.2234° N, 8.1234° E · 408M ELEVATION</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section ref={engineRef} className="border-y border-linen-hairline bg-celadon-mist/40">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-10 py-16 lg:py-24">
+          <div className="flex flex-col lg:flex-row justify-between gap-10 mb-12">
+            <div>
+              <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-medical-emerald mb-4">02 / Epigenetic Engine</div>
+              <h2 className="font-serif text-[36px] lg:text-[52px] leading-[0.95] tracking-tight">Biological age &<br/>biomarker diagnostic engine</h2>
+            </div>
+            <p className="max-w-[420px] font-serif text-[17px] leading-[1.6] text-slate-celadon">Calibrated on 4,200 executive patients across Zurich and Mayfair. Real-time DNAm PhenoAge modeling with clinical-grade metabolomic weighting.</p>
+          </div>
+          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 lg:gap-12">
+            <div className="bg-alabaster border border-linen-hairline p-8 lg:p-10">
+              <div className="flex items-center justify-between mb-8">
+                <span className="font-mono text-[11px] tracking-[0.18em] uppercase">Chronological Age</span>
+                <span className="font-mono text-[28px] tabular-nums">{chronoAge}</span>
+              </div>
+              <input type="range" min="25" max="75" value={chronoAge} onChange={(e)=>setChronoAge(parseInt(e.target.value))} className="range-slider w-full appearance-none bg-transparent" />
+              <div className="flex justify-between font-mono text-[10px] text-slate-celadon mt-2"><span>25 YRS</span><span>75 YRS</span></div>
+              <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+                {[
+                  {label:'Average Nightly Deep Sleep', value:sleepOpt, options:['< 1.0 hr','1.5 hrs','2.0+ hrs'], setter:setSleepOpt},
+                  {label:'Resting Heart Rate', value:rhr, options:['45–55 bpm','56–65 bpm','66+ bpm'], setter:setRhr},
+                  {label:'VO2 Max Tier', value:vo2, options:['Fair','Excellent','Elite (>50 ml/kg/min)'], setter:setVo2},
+                  {label:'Fasting Glucose / Metabolic', value:glucose, options:['Optimized (<85 mg/dL)','Borderline','Elevated'], setter:setGlucose},
+                ].map((field)=>(
+                  <div key={field.label} className="space-y-3">
+                    <div className="font-mono text-[10px] tracking-[0.16em] uppercase text-slate-celadon">{field.label}</div>
+                    <div className="flex flex-wrap gap-2">
+                      {field.options.map((opt)=>(
+                        <button key={opt} onClick={()=>field.setter(opt)} className={`px-3 py-2 border font-mono text-[11px] tracking-wide transition-all ${field.value===opt?'bg-pine-obsidian text-[#F8FAF8] border-pine-obsidian':'bg-transparent border-linen-hairline text-slate-celadon hover:border-pine-obsidian hover:text-pine-obsidian'}`}>{opt}</button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-10 pt-8 border-t border-linen-hairline flex items-center gap-3">
+                <div className="w-2 h-2 bg-medical-emerald rounded-full animate-pulse"></div>
+                <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-slate-celadon">Live DNAm Model v4.2 — Zurich Lab Compute</span>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="bg-pine-obsidian text-[#DFE6E2] p-8 lg:p-10">
+                <div className="font-mono text-[10px] tracking-[0.2em] uppercase opacity-60">Projected Biological / DNAm PhenoAge</div>
+                <div className="mt-4 flex items-baseline gap-4">
+                  <span className="font-serif text-[64px] leading-none tabular-nums">{diagnostics.bioAge}</span>
+                  <span className="font-mono text-[14px]">YRS</span>
+                  <span className={`ml-auto font-mono text-[12px] px-2 py-1 border ${parseFloat(diagnostics.delta)<=0?'border-medical-emerald text-medical-emerald':'border-suede-cognac text-suede-cognac'}`}>{parseFloat(diagnostics.delta)>0?'+':''}{diagnostics.delta} vs chrono</span>
+                </div>
+                <div className="mt-8 grid grid-cols-3 gap-6 border-t border-[#2A3632] pt-6">
+                  <div><div className="font-mono text-[10px] uppercase opacity-60">Chrono</div><div className="font-mono text-[18px] tabular-nums mt-1">{chronoAge}.0</div></div>
+                  <div><div className="font-mono text-[10px] uppercase opacity-60">Adjustment</div><div className="font-mono text-[18px] tabular-nums mt-1">{diagnostics.adjustment}</div></div>
+                  <div><div className="font-mono text-[10px] uppercase opacity-60">Model</div><div className="font-mono text-[11px] mt-1">PhenoAge v2 + GrimAge2</div></div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-alabaster border border-linen-hairline p-6">
+                  <div className="font-mono text-[10px] tracking-[0.16em] uppercase text-slate-celadon">Rate of Aging Factor</div>
+                  <div className="mt-3 flex items-baseline gap-2"><span className="font-mono text-[32px] tabular-nums">{diagnostics.rateOfAging}x</span><span className="font-mono text-[11px] text-slate-celadon">vs population 1.00x</span></div>
+                  <div className="mt-4 h-1 bg-linen-hairline w-full"><div className="h-full bg-medical-emerald" style={{width:`${Math.max(10,Math.min(100,(2-parseFloat(diagnostics.rateOfAging))*70+20))}%`}}></div></div>
+                </div>
+                <div className="bg-alabaster border border-linen-hairline p-6">
+                  <div className="font-mono text-[10px] tracking-[0.16em] uppercase text-slate-celadon">Epigenetic Target Reversal Potential</div>
+                  <div className="mt-3 flex items-baseline gap-2"><span className="font-mono text-[32px] tabular-nums">-{diagnostics.phenoReduction}</span><span className="font-mono text-[11px] text-slate-celadon">yrs / 18 months</span></div>
+                  <div className="mt-4 font-mono text-[10px] text-medical-emerald">ACHIEVABLE WITH PROTOCOL</div>
+                </div>
+              </div>
+              <button onClick={()=>setShowSummary(true)} className="w-full bg-[#F0F4F1] border border-pine-obsidian font-mono text-[11px] tracking-[0.18em] py-4 hover:bg-pine-obsidian hover:text-[#F8FAF8] transition-colors flex items-center justify-center gap-2">EXPORT CONFIDENTIAL HEALTH SUMMARY <span className="text-[14px]">↗</span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section ref={tiersRef} className="max-w-[1600px] mx-auto px-6 lg:px-10 py-20 lg:py-28">
+        <div className="flex flex-col lg:flex-row justify-between gap-8 mb-12">
+          <h2 className="font-serif text-[36px] lg:text-[52px] leading-[0.95] tracking-tight">Diagnostic tiers &<br/>clinical allocations</h2>
+          <div className="max-w-[380px]"><p className="font-serif text-[17px] leading-[1.6] text-slate-celadon">Three annual programs. Cohort-capped. Pricing displayed in selected currency with live conversion.</p><div className="mt-4 font-mono text-[10px] tracking-wide text-slate-celadon">ALLOCATIONS SECURED VIA CLINICAL ADMISSION PROTOCOL ONLY</div></div>
+        </div>
+        <div className="grid lg:grid-cols-3 gap-[1px] bg-linen-hairline border border-linen-hairline">
+          {TIERS.map((tier)=>(
+            <div key={tier.id} className={`bg-alabaster p-8 lg:p-10 flex flex-col ${tier.id==='tier2'?'lg:-mt-4 lg:mb-4 lg:shadow-[0_20px_60px_rgba(22,32,30,0.08)] z-10 border border-pine-obsidian':''}`}>
+              <div className="flex justify-between items-start"><span className={`font-mono text-[10px] tracking-[0.2em] px-2 py-1 border ${tier.id==='tier2'?'bg-pine-obsidian text-[#F8FAF8] border-pine-obsidian':'border-linen-hairline text-slate-celadon'}`}>{tier.tag}</span><span className="font-mono text-[10px] text-slate-celadon">TIER {tier.id.replace('tier','')}</span></div>
+              <h3 className="font-serif text-[24px] leading-[1.1] mt-6 min-h-[56px]">{tier.name}</h3>
+              <div className="mt-6 flex items-baseline gap-2"><span className="font-mono text-[36px] tabular-nums tracking-tight">{formatPrice(tier.basePrice)}</span><span className="font-mono text-[11px] text-slate-celadon">/ yr · {currency}</span></div>
+              <div className="mt-8 space-y-3 flex-1">
+                {tier.features.map((f)=>(
+                  <div key={f} className="flex gap-3"><span className="mt-1.5 w-1 h-1 bg-medical-emerald rounded-full flex-shrink-0"></span><span className="font-mono text-[11px] leading-[1.5] text-slate-celadon">{f}</span></div>
+                ))}
+              </div>
+              <button onClick={()=>{setSelectedTier(tier.id); setShowAdmission(true); setAdmissionStep(1); setIntakeConfirmed(false);}} className={`mt-10 w-full font-mono text-[11px] tracking-[0.18em] py-4 border transition-colors ${tier.id==='tier2'?'bg-pine-obsidian text-[#F8FAF8] border-pine-obsidian hover:bg-[#1f2c29]':'border-pine-obsidian hover:bg-pine-obsidian hover:text-[#F8FAF8]'}`}>INITIATE ALLOCATION — {tier.id.toUpperCase()}</button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="bg-pine-obsidian text-[#DFE6E2]">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-10 py-20 lg:py-28">
+          <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-12">
+            <div>
+              <div className="font-mono text-[10px] tracking-[0.22em] uppercase opacity-60 mb-6">03 / Biomarker Sequencing Panel</div>
+              <h2 className="font-serif text-[36px] lg:text-[48px] leading-[0.95]">140+ clinical markers<br/>sequenced in-house.</h2>
+              <p className="mt-6 font-serif text-[17px] leading-[1.6] opacity-70 max-w-[420px]">Every assay performed in our Zurich Enge cleanroom laboratory under ISO 15189:2022. No third-party outsourcing.</p>
+              <div className="mt-10 aspect-[4/3] overflow-hidden bg-[#1e2e2b]"><img src="assets/images/biomarker-sequencing-lab.jpg" alt="Lab" className="w-full h-full object-cover opacity-90" /></div>
+              <div className="mt-6 grid grid-cols-2 gap-4 font-mono text-[10px] tracking-wide opacity-60"><div>CLASS 1000 CLEANROOM<br/>CERTIFIED 2024 · AIRFLOW OK</div><div>EPIGEN-384-2024-112 RUN<br/>METHYLATION EFFICIENCY 98.4%</div></div>
+            </div>
+            <div>
+              <div className="flex flex-wrap gap-2 border-b border-[#2A3632] pb-4">
+                {Object.keys(BIOMARKER_TABS).map((tab)=>(
+                  <button key={tab} onClick={()=>setBiomarkerTab(tab)} className={`font-mono text-[11px] tracking-[0.14em] px-4 py-2 border transition-all ${biomarkerTab===tab?'bg-[#F8FAF8] text-pine-obsidian border-[#F8FAF8]':'border-[#2A3632] text-[#DFE6E2]/60 hover:border-[#DFE6E2]/30 hover:text-[#DFE6E2]'}`}>{tab.toUpperCase()}</button>
+                ))}
+              </div>
+              <div className="mt-8 space-y-[1px] bg-[#2A3632]">
+                {BIOMARKER_TABS[biomarkerTab].map((marker)=>(
+                  <div key={marker.name} className="bg-[#16201E] p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="min-w-0 flex-1"><div className="font-mono text-[13px] tracking-wide">{marker.name}</div><div className="font-mono text-[10px] text-[#DFE6E2]/50 mt-1">{marker.mechanism}</div></div>
+                    <div className="flex gap-8 md:gap-12"><div><div className="font-mono text-[9px] uppercase opacity-40">Standard Range</div><div className="font-mono text-[11px] mt-1 tabular-nums">{marker.std}</div></div><div><div className="font-mono text-[9px] uppercase text-medical-emerald">Target Longevity</div><div className="font-mono text-[11px] mt-1 text-medical-emerald tabular-nums">{marker.target}</div></div></div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-8 bg-[#1e2e2b] border border-[#2A3632] p-6"><div className="font-mono text-[10px] tracking-[0.16em] uppercase opacity-60">Intervention Mechanism — {biomarkerTab}</div><p className="mt-3 font-serif text-[14px] leading-[1.6] opacity-70">{biomarkerTab==='Epigenetic Clocks'&&'Personalized peptide regimens target CpG sites with highest weight in GrimAge2 acceleration. Methylation editing via TET activators + DNMT inhibition screening.'}{biomarkerTab==='Metabolic & Mitochondrial'&&'Mitochondrial biogenesis via urolithin A, MOTS-c, and controlled Zone 2 exposure. NAD+ salvage pathway supported with NMN + CD38 inhibition.'}{biomarkerTab==='Cardiovascular Endothelium'&&'Endothelial glycocalyx restoration with fucoidan + rhamnan sulfate. ApoB lowering via PCSK9 modulation and structured lipidomics.'}{biomarkerTab==='Neuro-Immune Signaling'&&'BDNF upregulation through precision exercise dosing + magnesium L-threonate. IL-6 suppression via low-dose rapamycin pulsing and senolytic clearance.'}</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-[1600px] mx-auto px-6 lg:px-10 py-20 lg:py-28">
+        <div className="grid lg:grid-cols-2 gap-[1px] bg-linen-hairline border border-linen-hairline">
+          <div className="bg-alabaster p-8 lg:p-12"><div className="font-mono text-[10px] tracking-[0.22em] uppercase text-medical-emerald">Clinical Locations</div><h3 className="font-serif text-[32px] leading-[0.95] mt-4">Zurich Enge &<br/>London Mayfair</h3><div className="mt-8 space-y-6"><div className="border-t border-linen-hairline pt-6"><div className="font-mono text-[11px] tracking-[0.14em]">ZURICH ENGE — PRIMARY SEQUENCING</div><div className="font-serif text-[15px] mt-2 text-slate-celadon">Gotthardstrasse 26, 8002 Enge<br/>Private entrance via Seestrasse courtyard. Lake Zurich diagnostic suite.</div></div><div className="border-t border-linen-hairline pt-6"><div className="font-mono text-[11px] tracking-[0.14em]">LONDON MAYFAIR — LONGEVITY SANCTUARY</div><div className="font-serif text-[15px] mt-2 text-slate-celadon">14 Queen Anne Street, Marylebone, W1G 9JG<br/>Hyperbaric + cryo-longevity chamber suite. Harley Street accredited.</div></div></div><div className="mt-10 aspect-[16/10] overflow-hidden bg-celadon-mist"><img src="assets/images/cryo-chamber-detail.jpg" alt="Cryo Chamber" className="w-full h-full object-cover" /></div></div>
+          <div className="bg-celadon-mist/50 p-8 lg:p-12 flex flex-col"><div className="font-mono text-[10px] tracking-[0.22em] uppercase text-medical-emerald">At-Home Phlebotomy</div><h3 className="font-serif text-[32px] leading-[0.95] mt-4">International courier<br/>collection kit</h3><p className="mt-4 font-serif text-[15px] leading-[1.6] text-slate-celadon max-w-[420px]">Bespoke slate-grey kit lined in cream suede. Titanium lancet, vacuum-sealed glass tubes, gold foil-stamped instructions. 72-hour global return.</p><div className="mt-8 flex-1 flex items-center justify-center bg-alabaster border border-linen-hairline p-8"><img src="assets/images/phlebotomy-kit-luxury.jpg" alt="Phlebotomy Kit" className="max-w-[420px] w-full object-contain" /></div><div className="mt-6 font-mono text-[10px] tracking-wide text-slate-celadon flex justify-between"><span>EPIGENE EST. 2023 · STERILE · VACUUM · K2 EDTA</span><span>PREPAID RETURN</span></div></div>
+        </div>
+      </section>
+
+      <section className="border-t border-linen-hairline">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-10 py-20 lg:py-28">
+          <div className="flex justify-between items-end mb-12"><h2 className="font-serif text-[36px] lg:text-[52px] leading-[0.95]">Physician leadership &<br/>clinical governance</h2><div className="hidden lg:block font-mono text-[10px] tracking-wide text-slate-celadon max-w-[280px]">All faculty hold dual appointments in molecular biology and clinical longevity medicine. Cohort cap enforced at 100 patients per physician annually.</div></div>
+          <div className="grid md:grid-cols-2 gap-[1px] bg-linen-hairline border border-linen-hairline">
+            {[
+              {img:'assets/images/physician-portrait-1.jpg', name:'Dr. Elena Voss, MD, PhD', role:'Chief Medical Officer & Molecular Biology', cred:'Former Roche Genentech · Stanford Epigenetics Lab · 18 years', bio:'Leads DNA methylation array interpretation and peptide protocol design. Published on TET-mediated demethylation in human longevity.'},
+              {img:'assets/images/physician-portrait-2.jpg', name:'Dr. Julian Ashford, MD', role:'Director, Neuro-Longevity & Metabolic Medicine', cred:'Oxford Neuroscience · Royal College of Physicians Fellowship', bio:'Specializes in BDNF, IGF-1 axis, and cardiovascular endothelium restoration. Architect of Aethel VO2 and glycocalyx protocol.'},
+            ].map((doc)=>(
+              <div key={doc.name} className="bg-alabaster p-8 lg:p-10 flex gap-8"><div className="w-[120px] h-[120px] lg:w-[160px] lg:h-[160px] flex-shrink-0 overflow-hidden bg-celadon-mist"><img src={doc.img} alt={doc.name} className="w-full h-full object-cover grayscale" /></div><div className="min-w-0"><div className="font-serif text-[20px] leading-tight">{doc.name}</div><div className="font-mono text-[10px] tracking-[0.14em] uppercase text-medical-emerald mt-1">{doc.role}</div><div className="font-mono text-[10px] text-slate-celadon mt-3">{doc.cred}</div><p className="font-serif text-[14px] leading-[1.6] text-slate-celadon mt-4">{doc.bio}</p></div></div>
+            ))}
+          </div>
+          <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4">{['Swissmedic Regulated','GCP & GLP Certified Laboratories','Royal College of Physicians Fellowship','Independent Ethics Review Board Oversight'].map((a)=>(<div key={a} className="border border-linen-hairline px-4 py-3 font-mono text-[10px] tracking-[0.14em] text-slate-celadon text-center">{a.toUpperCase()}</div>))}</div>
+        </div>
+      </section>
+
+      <footer className="bg-pine-obsidian text-[#DFE6E2]">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-10 py-16 lg:py-20">
+          <div className="flex flex-col lg:flex-row justify-between gap-12">
+            <div><div className="font-serif text-[28px] tracking-wide">AETHEL</div><div className="font-mono text-[10px] tracking-[0.18em] opacity-60 mt-1">CELLULAR MEDICINE · EST. 2018</div><div className="mt-8 space-y-3 font-mono text-[11px] leading-[1.6] opacity-70 max-w-[300px]"><div>Zurich Enge — Gotthardstrasse 26, 8002 Zurich<br/>Switzerland · +41 44 123 4567</div><div>London Mayfair — 14 Queen Anne Street, Marylebone<br/>London W1G 9JG · +44 20 7123 4567</div></div></div>
+            <div className="grid grid-cols-2 gap-12 lg:gap-24"><div className="space-y-3"><div className="font-mono text-[10px] tracking-[0.2em] uppercase opacity-40">Governance</div>{['Clinical Ethics Statement','Biomarker Methodology Whitepaper','Patient Confidentiality Charter','Medical Governance'].map((l)=>(<div key={l} className="font-mono text-[11px] opacity-70 hover:opacity-100 cursor-pointer">{l}</div>))}</div><div className="space-y-3"><div className="font-mono text-[10px] tracking-[0.2em] uppercase opacity-40">Clinical Access</div><div className="font-mono text-[11px] opacity-70">Private consultations by referral or direct admission.</div><div className="font-mono text-[11px] opacity-70">Cohort cap 100 patients per physician.</div><button onClick={()=>{setShowAdmission(true); setIntakeConfirmed(false);}} className="mt-4 border border-[#DFE6E2]/30 px-4 py-2 font-mono text-[10px] tracking-[0.14em] hover:bg-[#DFE6E2] hover:text-pine-obsidian transition-colors">REQUEST ADMISSION</button></div></div>
+          </div>
+          <div className="mt-16 pt-8 border-t border-[#2A3632] flex flex-col lg:flex-row justify-between gap-4 font-mono text-[10px] tracking-wide opacity-40"><span>© 2026 AETHEL CELLULAR AG · ZURICH · ALL RIGHTS RESERVED · SWISSMEDIC REGULATED ENTITY 2024-MD-0482</span><span>CONFIDENTIAL EXECUTIVE PROTOCOLS · PRIVATELY ACCREDITED</span></div>
+        </div>
+      </footer>
+
+      {showPortal && (
+        <div className="fixed inset-0 z-50 flex justify-end"><div className="absolute inset-0 bg-pine-obsidian/40 backdrop-blur-sm" onClick={()=>setShowPortal(false)}></div><div className="relative w-full max-w-[480px] bg-alabaster h-full border-l border-linen-hairline flex flex-col"><div className="p-8 border-b border-linen-hairline flex justify-between items-center"><div><div className="font-serif text-[22px]">Patient Portal</div><div className="font-mono text-[10px] tracking-wide text-slate-celadon mt-1">SECURE ACCESS · AES-256 · SWISS HOSTING</div></div><button onClick={()=>setShowPortal(false)} className="w-8 h-8 border border-linen-hairline flex items-center justify-center hover:bg-celadon-mist">✕</button></div><div className="p-8 flex-1 overflow-auto"><div className="bg-celadon-mist border border-linen-hairline p-6"><div className="font-mono text-[11px] tracking-[0.14em]">AUTHENTICATED ACCESS REQUIRED</div><p className="font-serif text-[14px] mt-3 text-slate-celadon">Enter your clinical accession code and date of birth to access your private epigenetic dashboard.</p><div className="mt-6 space-y-4"><div><label className="font-mono text-[10px] uppercase text-slate-celadon">Accession Code</label><input placeholder="AE-XXXX-XXXX-CL" className="mt-1 w-full border border-linen-hairline bg-alabaster px-3 py-2.5 font-mono text-[12px] outline-none focus:border-pine-obsidian" /></div><div><label className="font-mono text-[10px] uppercase text-slate-celadon">Date of Birth</label><input type="date" className="mt-1 w-full border border-linen-hairline bg-alabaster px-3 py-2.5 font-mono text-[12px] outline-none focus:border-pine-obsidian" /></div><button className="w-full bg-pine-obsidian text-[#F8FAF8] font-mono text-[11px] tracking-[0.18em] py-3 hover:bg-[#1f2c29]">AUTHENTICATE & ACCESS DASHBOARD</button></div></div><div className="mt-8 space-y-3"><div className="font-mono text-[10px] tracking-[0.2em] uppercase">Recent Clinical Activity</div>{[{date:'2026-04-18', event:'Microfluidic draw — Panel 140', status:'SEQUENCED'},{date:'2026-03-22', event:'Quarterly physician review', status:'COMPLETED'},{date:'2026-02-10', event:'DEXA + Visceral MRI', status:'ARCHIVED'}].map((r)=>(<div key={r.date} className="flex justify-between border-b border-linen-hairline py-3 font-mono text-[11px]"><span className="text-slate-celadon">{r.date} · {r.event}</span><span className="text-medical-emerald">{r.status}</span></div>))}</div></div></div></div>
+      )}
+
+      {showSummary && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"><div className="absolute inset-0 bg-pine-obsidian/60 backdrop-blur-sm" onClick={()=>setShowSummary(false)}></div><div className="relative bg-alabaster w-full max-w-[640px] border border-linen-hairline max-h-[90vh] overflow-auto"><div className="p-8 border-b border-linen-hairline flex justify-between items-start"><div><div className="font-mono text-[10px] tracking-[0.22em] uppercase text-medical-emerald">Confidential Health Summary</div><div className="font-serif text-[24px] mt-2">Epigenetic Risk Summary — {accessionCode}</div><div className="font-mono text-[10px] text-slate-celadon mt-1">GENERATED {new Date().toISOString().slice(0,10)} · ZURICH LAB COMPUTE v4.2</div></div><button onClick={()=>setShowSummary(false)} className="w-8 h-8 border border-linen-hairline flex items-center justify-center hover:bg-celadon-mist">✕</button></div><div className="p-8 space-y-6"><div className="grid grid-cols-3 gap-4"><div className="bg-celadon-mist p-4 border border-linen-hairline"><div className="font-mono text-[10px] uppercase text-slate-celadon">DNAm PhenoAge</div><div className="font-mono text-[22px] tabular-nums mt-1">{diagnostics.bioAge} yrs</div></div><div className="bg-celadon-mist p-4 border border-linen-hairline"><div className="font-mono text-[10px] uppercase text-slate-celadon">Rate of Aging</div><div className="font-mono text-[22px] tabular-nums mt-1">{diagnostics.rateOfAging}x</div></div><div className="bg-pine-obsidian text-[#F8FAF8] p-4"><div className="font-mono text-[10px] uppercase opacity-60">Reversal Potential</div><div className="font-mono text-[22px] tabular-nums mt-1">-{diagnostics.phenoReduction} yrs</div></div></div><div className="border border-linen-hairline p-6"><div className="font-mono text-[11px] tracking-[0.14em]">CLINICAL INTERPRETATION</div><p className="font-serif text-[14px] leading-[1.6] text-slate-celadon mt-3">Based on inputs: chronological age {chronoAge}, deep sleep {sleepOpt}, resting HR {rhr}, VO2 {vo2}, glucose {glucose}. Your projected DNAm PhenoAge of {diagnostics.bioAge} years indicates {parseFloat(diagnostics.delta)<=0?'a favorable epigenetic profile relative to chronological age':'accelerated epigenetic aging requiring intervention'}. Rate of aging factor {diagnostics.rateOfAging}x vs population baseline 1.00x suggests {parseFloat(diagnostics.rateOfAging)<0.9?'slowed systemic decline':parseFloat(diagnostics.rateOfAging)>1.1?'accelerated systemic decline':'average systemic aging'}. With Aethel Tier II protocol, target reversal of {diagnostics.phenoReduction} years achievable over 18 months.</p></div><div className="bg-celadon-mist/60 border border-linen-hairline p-4 font-mono text-[10px] leading-[1.6] text-slate-celadon">ACCESSION CODE: {accessionCode} · METHOD: Illumina EPIC v2 + LC-MS metabolomics · CONFIDENTIAL — FOR PHYSICIAN REVIEW ONLY<br/>This summary does not constitute medical diagnosis. Final interpretation by Chief Medical Officer after full sequencing.</div><div className="flex gap-3"><button onClick={()=>{setShowSummary(false); setShowAdmission(true); setIntakeConfirmed(false);}} className="flex-1 bg-pine-obsidian text-[#F8FAF8] font-mono text-[11px] tracking-[0.18em] py-3">REQUEST CLINICAL ADMISSION WITH THIS DOSSIER</button><button onClick={()=>setShowSummary(false)} className="px-6 border border-linen-hairline font-mono text-[11px] tracking-[0.18em]">CLOSE</button></div></div></div></div>
+      )}
+
+      {showAdmission && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"><div className="absolute inset-0 bg-pine-obsidian/60 backdrop-blur-md" onClick={()=>setShowAdmission(false)}></div><div className="relative bg-alabaster w-full max-w-[720px] border border-linen-hairline max-h-[92vh] overflow-auto">
+          {!intakeConfirmed ? (
+            <>
+              <div className="sticky top-0 bg-alabaster border-b border-linen-hairline p-8 flex justify-between items-start z-10"><div><div className="font-mono text-[10px] tracking-[0.22em] uppercase text-medical-emerald">Confidential Clinical Admission</div><div className="font-serif text-[26px] mt-2 leading-tight">Private epigenetic intake dossier</div><div className="flex gap-2 mt-4">{[1,2,3].map((s)=>(<div key={s} className={`h-1 w-12 ${admissionStep>=s?'bg-pine-obsidian':'bg-linen-hairline'}`}></div>))}</div></div><button onClick={()=>setShowAdmission(false)} className="w-8 h-8 border border-linen-hairline flex items-center justify-center hover:bg-celadon-mist">✕</button></div>
+              <div className="p-8">
+                {admissionStep===1 && (
+                  <div className="space-y-6"><div className="font-mono text-[11px] tracking-[0.14em] uppercase">Step 1 — Patient Details</div><div className="grid md:grid-cols-2 gap-6"><div><label className="font-mono text-[10px] uppercase text-slate-celadon">Full Legal Name</label><input value={formData.fullName} onChange={(e)=>setFormData({...formData,fullName:e.target.value})} placeholder="Alexander M. Sterling" className="mt-1 w-full border-b border-linen-hairline bg-transparent py-3 font-serif text-[15px] outline-none focus:border-pine-obsidian" /></div><div><label className="font-mono text-[10px] uppercase text-slate-celadon">Date of Birth</label><input type="date" value={formData.dob} onChange={(e)=>setFormData({...formData,dob:e.target.value})} className="mt-1 w-full border-b border-linen-hairline bg-transparent py-3 font-mono text-[13px] outline-none focus:border-pine-obsidian" /></div><div><label className="font-mono text-[10px] uppercase text-slate-celadon">Primary Residence Jurisdiction</label><input value={formData.jurisdiction} onChange={(e)=>setFormData({...formData,jurisdiction:e.target.value})} placeholder="Zurich, CH · Monaco · London, UK" className="mt-1 w-full border-b border-linen-hairline bg-transparent py-3 font-serif text-[15px] outline-none focus:border-pine-obsidian" /></div><div><label className="font-mono text-[10px] uppercase text-slate-celadon">Direct Contact Phone</label><input value={formData.phone} onChange={(e)=>setFormData({...formData,phone:e.target.value})} placeholder="+41 79 123 4567" className="mt-1 w-full border-b border-linen-hairline bg-transparent py-3 font-mono text-[13px] outline-none focus:border-pine-obsidian" /></div></div><div className="flex justify-end pt-6"><button onClick={()=>setAdmissionStep(2)} className="bg-pine-obsidian text-[#F8FAF8] font-mono text-[11px] tracking-[0.18em] px-8 py-3">CONTINUE TO CLINICAL OBJECTIVES</button></div></div>
+                )}
+                {admissionStep===2 && (
+                  <div className="space-y-6"><div className="font-mono text-[11px] tracking-[0.14em] uppercase">Step 2 — Clinical Objectives</div><div className="grid md:grid-cols-2 gap-3">{['Metabolic Longevity','Cognitive Longevity','Cardiovascular Optimization','Epigenetic Age Reversal','Immune Resilience','Hormetic Stress Adaptation'].map((obj)=>(
+                    <button key={obj} onClick={()=>setFormData({...formData,objectives:formData.objectives.includes(obj)?formData.objectives.filter(o=>o!==obj):[...formData.objectives,obj]})} className={`text-left p-4 border font-mono text-[11px] tracking-wide transition-all ${formData.objectives.includes(obj)?'bg-pine-obsidian text-[#F8FAF8] border-pine-obsidian':'border-linen-hairline text-slate-celadon hover:border-pine-obsidian'}`}>{obj}</button>
+                  ))}</div><div className="flex justify-between pt-6"><button onClick={()=>setAdmissionStep(1)} className="font-mono text-[11px] tracking-[0.18em] px-6 py-3 border border-linen-hairline">BACK</button><button onClick={()=>setAdmissionStep(3)} className="bg-pine-obsidian text-[#F8FAF8] font-mono text-[11px] tracking-[0.18em] px-8 py-3">CONTINUE TO LOCATION & TIER</button></div></div>
+                )}
+                {admissionStep===3 && (
+                  <div className="space-y-6"><div className="font-mono text-[11px] tracking-[0.14em] uppercase">Step 3 — Primary Clinic & Allocation</div><div><label className="font-mono text-[10px] uppercase text-slate-celadon">Primary Clinic Location</label><div className="mt-3 grid grid-cols-1 gap-2">{['Zurich Enge','London Mayfair','Private At-Home Courier'].map((loc)=>(
+                    <button key={loc} onClick={()=>setFormData({...formData,location:loc})} className={`text-left px-4 py-3 border font-mono text-[12px] flex justify-between ${formData.location===loc?'bg-pine-obsidian text-[#F8FAF8] border-pine-obsidian':'border-linen-hairline'}`}><span>{loc}</span><span className="opacity-60">{loc==='Zurich Enge'?'GOTTHARDSTRASSE 26':loc==='London Mayfair'?'QUEEN ANNE STREET':'72-HR GLOBAL COURIER'}</span></button>
+                  ))}</div></div><div><label className="font-mono text-[10px] uppercase text-slate-celadon">Requested Tier Allocation</label><div className="mt-3 grid grid-cols-1 gap-2">{TIERS.map((t)=>(
+                    <button key={t.id} onClick={()=>setSelectedTier(t.id)} className={`text-left px-4 py-3 border font-mono text-[12px] flex justify-between ${selectedTier===t.id?'bg-celadon-mist border-pine-obsidian':'border-linen-hairline'}`}><span>{t.name}</span><span>{formatPrice(t.basePrice)} / yr</span></button>
+                  ))}</div></div><div className="flex justify-between pt-6"><button onClick={()=>setAdmissionStep(2)} className="font-mono text-[11px] tracking-[0.18em] px-6 py-3 border border-linen-hairline">BACK</button><button onClick={handleAdmissionSubmit} className="bg-pine-obsidian text-[#F8FAF8] font-mono text-[11px] tracking-[0.18em] px-8 py-3">TRANSMIT CLINICAL DOSSIER</button></div></div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="p-10 lg:p-14 text-center"><div className="w-12 h-12 rounded-full bg-medical-emerald/10 border border-medical-emerald/20 flex items-center justify-center mx-auto"><span className="text-medical-emerald text-[20px]">✓</span></div><div className="font-mono text-[10px] tracking-[0.22em] uppercase text-medical-emerald mt-6">Clinical Intake Confirmed</div><h3 className="font-serif text-[28px] leading-[1.1] mt-4">Clinical Dossier #{dossierId} received.</h3><p className="font-serif text-[15px] leading-[1.6] text-slate-celadon mt-4 max-w-[460px] mx-auto">Assigned to Chief Medical Officer, Zurich Private Clinic. Expedited phlebotomy courier kit dispatched to {formData.jurisdiction||'primary residence'}. A clinical registrar will coordinate your confidential intake consultation within 24 hours.</p><div className="mt-8 bg-celadon-mist border border-linen-hairline p-4 text-left max-w-[460px] mx-auto"><div className="font-mono text-[10px] uppercase text-slate-celadon">Dossier Details</div><div className="mt-2 space-y-1 font-mono text-[11px]"><div className="flex justify-between"><span className="text-slate-celadon">Patient</span><span>{formData.fullName||'Confidential'}</span></div><div className="flex justify-between"><span className="text-slate-celadon">Tier</span><span>{TIERS.find(t=>t.id===selectedTier)?.name}</span></div><div className="flex justify-between"><span className="text-slate-celadon">Location</span><span>{formData.location}</span></div><div className="flex justify-between"><span className="text-slate-celadon">Accession</span><span>{accessionCode}</span></div></div></div><button onClick={()=>setShowAdmission(false)} className="mt-8 bg-pine-obsidian text-[#F8FAF8] font-mono text-[11px] tracking-[0.18em] px-8 py-3">RETURN TO CLINICAL OVERVIEW</button></div>
+          )}
+        </div></div>
+      )}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
